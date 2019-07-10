@@ -137,6 +137,35 @@ class TableWidget(QWidget):
 
 
 
+
+
+        # Combos Tab
+
+        self.plateNumber = 1
+
+        self.combinationTab.layout = QHBoxLayout(self)
+        self.combinationTab.leftWidget = QWidget()
+        self.combinationTab.rightWidget = QTreeWidget()
+
+        self.combinationTab.leftWidget.layout = QFormLayout()
+        self.combinationTab.leftWidget.partBox = QLineEdit()
+        self.combinationTab.leftWidget.layout.addRow(QLabel('Plate Number' + str(self.plateNumber)), self.registryTab.leftWidget.partBox)
+        self.combinationTab.leftWidget.dropdown = QComboBox()
+        self.combinationTab.leftWidget.dropdown.addItems(listofstuff)
+        self.combinationTab.leftWidget.layout.addRow(QLabel('Part Name'), self.registryTab.leftWidget.dropdown)
+
+        self.combinationTab.leftWidget.addButton = QPushButton('Add')
+        self.combinationTab.leftWidget.addButton.clicked.connect(self.on_add_click)
+        self.combinationTab.leftWidget.layout.addRow(self.registryTab.leftWidget.addButton)
+
+
+
+
+
+
+
+
+
         self.layout.addWidget(self.tabs)
         self.setLayout(self.layout)
 
