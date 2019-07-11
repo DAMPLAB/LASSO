@@ -69,7 +69,7 @@ class TableWidget(QWidget):
         self.tabs.addTab(self.finalTab, 'Final')
 
         # Creating widgets for Home tab
-        self.homeTitle = QLabel('OT2 GUI Bullshit')
+        self.homeTitle = QLabel('OT2 GUI')
         self.registryButton = QPushButton('Go to Parts Registry')
         self.combosButton = QPushButton('Create Combination')
 
@@ -118,13 +118,14 @@ class TableWidget(QWidget):
 
         self.registryTab.leftWidget.setLayout(self.registryTab.leftWidget.layout)
 
-        labels = ['Part Name', 'Part Type']
-        self.registryTab.rightWidget.setColumnCount(2)
+        labels = ['Part Name', 'Part Type', 'Volume']
+        self.registryTab.rightWidget.setColumnCount(3)
         self.registryTab.rightWidget.setHeaderLabels(labels)
 
-        columnWidth = self.registryTab.rightWidget.geometry().width() / 4
+        columnWidth = self.registryTab.rightWidget.geometry().width() / 6
         self.registryTab.rightWidget.setColumnWidth(0, columnWidth)
         self.registryTab.rightWidget.setColumnWidth(1, columnWidth)
+        self.registryTab.rightWidget.setColumnWidth(2, columnWidth)
 
 
 
@@ -143,20 +144,20 @@ class TableWidget(QWidget):
 
         self.plateNumber = 1
 
-        self.combinationTab.layout = QHBoxLayout(self)
-        self.combinationTab.leftWidget = QWidget()
-        self.combinationTab.rightWidget = QTreeWidget()
-
-        self.combinationTab.leftWidget.layout = QFormLayout()
-        self.combinationTab.leftWidget.partBox = QLineEdit()
-        self.combinationTab.leftWidget.layout.addRow(QLabel('Plate Number' + str(self.plateNumber)), self.registryTab.leftWidget.partBox)
-        self.combinationTab.leftWidget.dropdown = QComboBox()
-        self.combinationTab.leftWidget.dropdown.addItems(listofstuff)
-        self.combinationTab.leftWidget.layout.addRow(QLabel('Part Name'), self.registryTab.leftWidget.dropdown)
-
-        self.combinationTab.leftWidget.addButton = QPushButton('Add')
-        self.combinationTab.leftWidget.addButton.clicked.connect(self.on_add_click)
-        self.combinationTab.leftWidget.layout.addRow(self.registryTab.leftWidget.addButton)
+        # self.combinationTab.layout = QHBoxLayout(self)
+        # self.combinationTab.leftWidget = QWidget()
+        # self.combinationTab.rightWidget = QTreeWidget()
+        #
+        # self.combinationTab.leftWidget.layout = QFormLayout()
+        # self.combinationTab.leftWidget.partBox = QLineEdit()
+        # self.combinationTab.leftWidget.layout.addRow(QLabel('Plate Number' + str(self.plateNumber)), self.registryTab.leftWidget.partBox)
+        # self.combinationTab.leftWidget.dropdown = QComboBox()
+        # self.combinationTab.leftWidget.dropdown.addItems(listofstuff)
+        # self.combinationTab.leftWidget.layout.addRow(QLabel('Part Name'), self.registryTab.leftWidget.dropdown)
+        #
+        # self.combinationTab.leftWidget.addButton = QPushButton('Add')
+        # self.combinationTab.leftWidget.addButton.clicked.connect(self.on_add_click)
+        # self.combinationTab.leftWidget.layout.addRow(self.registryTab.leftWidget.addButton)
 
 
 
