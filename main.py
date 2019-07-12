@@ -3,26 +3,9 @@ from PyQt5.QtWidgets import * #QApplication, QMainWindow, QWidget, QTabWidget, Q
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import *
 from PyQt5 import QtCore
+import partstore
 
-
-class Part:
-    def __init__(self, name, type):
-        self.name = name
-        self.type = type
-
-    def getName(self):
-        return self.name
-
-    def getType(self):
-        return self.type
-
-    def setName(self, name):
-        self.name = name
-
-    def setType(self, type):
-        self.type = type
-
-
+ps = partstore.PartStore()
 
 class MainWindow(QMainWindow):
 
@@ -32,7 +15,7 @@ class MainWindow(QMainWindow):
         self.width = 800
         self.height = 500
 
-        self.setWindowTitle('OT2 GUI')
+        self.setWindowTitle('LASSO')
         self.setGeometry(0, 0, self.width, self.height)
 
         self.table_widget = TableWidget(self)
@@ -69,7 +52,7 @@ class TableWidget(QWidget):
         self.tabs.addTab(self.finalTab, 'Final')
 
         # Creating widgets for Home tab
-        self.homeTitle = QLabel('OT2 GUI')
+        self.homeTitle = QLabel('LASSO')
         self.registryButton = QPushButton('Go to Parts Registry')
         self.combosButton = QPushButton('Create Combination')
 
@@ -96,13 +79,28 @@ class TableWidget(QWidget):
         self.homeTab.setLayout(self.homeTab.layout)
 
 
-        listofstuff = ['Protein', 'CDS', 'Promoter', 'Terminator', 'RBS']
+        listofstuff = ['CDS', 'Insulator', 'Promoter', 'Terminator']
+        # Promoter, Terminator, CDS, Insulator,
 
         # Registry Tab
-
-        self.registryTab.layout = QHBoxLayout(self)
+        self.registryTab.layout = QHBoxLayout(self.registryTab)
         self.registryTab.leftWidget = QWidget()
         self.registryTab.rightWidget = QTreeWidget()
+
+        partsArray = ps.loadJSON('registry.json')
+        self.partNameArray = []
+        for currpart in partsArray:
+            partName = currpart.getName()
+            self.partNameArray.append(partName)
+            typeName = currpart.getType()
+            volumeName = currpart.getVolume()
+
+            treeItem = QTreeWidgetItem()
+            treeItem.setText(0, partName)
+            treeItem.setText(1, typeName)
+            treeItem.setText(2, volumeName)
+
+            self.registryTab.rightWidget.addTopLevelItem(treeItem)
 
         self.registryTab.leftWidget.layout = QFormLayout()
         self.registryTab.leftWidget.partBox = QLineEdit()
@@ -110,6 +108,9 @@ class TableWidget(QWidget):
         self.registryTab.leftWidget.dropdown = QComboBox()
         self.registryTab.leftWidget.dropdown.addItems(listofstuff)
         self.registryTab.leftWidget.layout.addRow(QLabel('Type'), self.registryTab.leftWidget.dropdown)
+
+        self.registryTab.leftWidget.volumeBox = QLineEdit()
+        self.registryTab.leftWidget.layout.addRow(QLabel('Volume (µL)'), self.registryTab.leftWidget.volumeBox)
 
         self.registryTab.leftWidget.addButton = QPushButton('Add')
         self.registryTab.leftWidget.addButton.clicked.connect(self.on_add_click)
@@ -142,25 +143,98 @@ class TableWidget(QWidget):
 
         # Combos Tab
 
-        self.plateNumber = 1
+        self.wellNumber = 1
+        self.combosDictionary = {}
 
-        # self.combinationTab.layout = QHBoxLayout(self)
-        # self.combinationTab.leftWidget = QWidget()
-        # self.combinationTab.rightWidget = QTreeWidget()
-        #
-        # self.combinationTab.leftWidget.layout = QFormLayout()
-        # self.combinationTab.leftWidget.partBox = QLineEdit()
-        # self.combinationTab.leftWidget.layout.addRow(QLabel('Plate Number' + str(self.plateNumber)), self.registryTab.leftWidget.partBox)
-        # self.combinationTab.leftWidget.dropdown = QComboBox()
-        # self.combinationTab.leftWidget.dropdown.addItems(listofstuff)
-        # self.combinationTab.leftWidget.layout.addRow(QLabel('Part Name'), self.registryTab.leftWidget.dropdown)
-        #
-        # self.combinationTab.leftWidget.addButton = QPushButton('Add')
-        # self.combinationTab.leftWidget.addButton.clicked.connect(self.on_add_click)
-        # self.combinationTab.leftWidget.layout.addRow(self.registryTab.leftWidget.addButton)
+        self.combinationTab.topLayout = QVBoxLayout(self.combinationTab)
+        self.combinationTab.topWidget = QWidget()
+
+        self.combinationTab.layout = QHBoxLayout(self.combinationTab.topWidget)
+        # self.combinationTab.topWidget.layout = QHBoxLayout(self.combinationTab)
+        self.combinationTab.leftWidget = QWidget()
+        self.combinationTab.rightWidget = QWidget()
+
+        self.combinationTab.pictureWidget = QLabel()
+        sbolImage = QPixmap('testimage.png')
+        self.combinationTab.pictureWidget.setPixmap(sbolImage)
+        self.combinationTab.pictureWidget.resize(sbolImage.width(),sbolImage.height())
+
+        self.combinationTab.toggleButtons = QWidget()
+        self.combinationTab.toggleButtons.layout = QHBoxLayout(self.combinationTab.toggleButtons)
+        self.combinationTab.toggleButtons.backButton = QPushButton('Back')
+        self.combinationTab.toggleButtons.nextButton = QPushButton('Next')
+        self.combinationTab.toggleButtons.finalButton = QPushButton('Final')
+
+        self.combinationTab.toggleButtons.backButton.clicked.connect(self.on_back_click)
+        self.combinationTab.toggleButtons.nextButton.clicked.connect(self.on_next_click)
+        self.combinationTab.toggleButtons.finalButton.clicked.connect(self.on_final_click)
+
+
+        self.combinationTab.toggleButtons.layout.addWidget(self.combinationTab.toggleButtons.backButton)
+        self.combinationTab.toggleButtons.layout.addWidget(self.combinationTab.toggleButtons.nextButton)
+        self.combinationTab.toggleButtons.layout.addWidget(self.combinationTab.toggleButtons.finalButton)
 
 
 
+
+        # self.combinationTab.rightWidget = QListWidget()
+
+
+        self.combinationTab.leftWidget.layout = QFormLayout()
+        self.combinationTab.rightWidget.layout = QVBoxLayout()
+
+
+        sizePolicy = QSizePolicy(QSizePolicy.Ignored,QSizePolicy.Ignored)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(1)
+        self.combinationTab.leftWidget.setSizePolicy(sizePolicy)
+        self.combinationTab.rightWidget.setSizePolicy(sizePolicy)
+
+        self.combinationTab.leftWidget.partBox = QLineEdit()
+        self.combinationTab.leftWidget.wellLabel = QLabel('Well #' + str(self.wellNumber))
+        self.combinationTab.leftWidget.layout.addRow(self.combinationTab.leftWidget.wellLabel)
+        self.combinationTab.leftWidget.dropdown = QComboBox()
+
+        self.combinationTab.leftWidget.dropdown.addItems(self.partNameArray)
+
+        self.combinationTab.leftWidget.layout.addRow(QLabel('Part Name'), self.combinationTab.leftWidget.dropdown)
+
+        self.combinationTab.leftWidget.addButton = QPushButton('Add Part')
+        self.combinationTab.leftWidget.addButton.clicked.connect(self.on_add_part_click)
+        self.combinationTab.leftWidget.layout.addRow(self.combinationTab.leftWidget.addButton)
+
+        self.combinationTab.leftWidget.setLayout(self.combinationTab.leftWidget.layout)
+
+        self.combinationTab.rightWidget.label = QLabel('Parts Combination')
+        self.combinationTab.rightWidget.listWidget = QListWidget()
+
+        font = QFont()
+        font.setPixelSize(14)
+        font.setPointSize(14)
+        font.setBold(True)
+
+        self.combinationTab.rightWidget.label.setFont(font)
+        self.combinationTab.rightWidget.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.combinationTab.leftWidget.wellLabel.setFont(font)
+
+        self.combinationTab.rightWidget.layout.addWidget(self.combinationTab.rightWidget.label)
+        self.combinationTab.rightWidget.layout.addWidget(self.combinationTab.rightWidget.listWidget)
+
+        self.combinationTab.rightWidget.setLayout(self.combinationTab.rightWidget.layout)
+
+        self.combinationTab.layout.addWidget(self.combinationTab.leftWidget, stretch = 0)
+        self.combinationTab.layout.addWidget(self.combinationTab.rightWidget, stretch = 0)
+
+
+        # self.combinationTab.layout.setSpacing(0)
+        # self.combinationTab.layout.addStretch()
+        self.combinationTab.topLayout.addWidget(self.combinationTab.topWidget)
+        self.combinationTab.topLayout.addWidget(self.combinationTab.pictureWidget)
+        self.combinationTab.topLayout.addWidget(self.combinationTab.toggleButtons)
+
+        self.combinationTab.topWidget.setLayout(self.combinationTab.layout)
+
+        self.combinationTab.setLayout(self.combinationTab.topLayout)
 
 
 
@@ -183,14 +257,87 @@ class TableWidget(QWidget):
     def on_add_click(self):
         formText = self.registryTab.leftWidget.partBox.text()
         comboText = self.registryTab.leftWidget.dropdown.currentText()
+        volumeText = self.registryTab.leftWidget.volumeBox.text()
+
+        self.partNameArray.append(formText)
+        self.combinationTab.leftWidget.dropdown.addItem(formText)
 
         treeItem = QTreeWidgetItem()
         treeItem.setText(0, formText)
         treeItem.setText(1, comboText)
+        treeItem.setText(2, volumeText)
         self.registryTab.rightWidget.addTopLevelItem(treeItem)
 
+        ps.addPart(formText, comboText, volumeText)
+        ps.saveJSON('registry.json')
 
+    @pyqtSlot()
+    def on_add_part_click(self):
+        if self.wellNumber not in self.combosDictionary:
+            self.combosDictionary[self.wellNumber] = []
 
+        nextPart =  self.combinationTab.leftWidget.dropdown.currentText()
+        part = ps.findPart(nextPart)
+
+        comboPartList = self.combosDictionary[self.wellNumber]
+        comboPartList.append(nextPart)
+
+        self.combinationTab.rightWidget.listWidget.addItem(str(len(comboPartList)) + '. '
+                                                + nextPart + ' (' + part.getType() + ')')
+
+    @pyqtSlot()
+    def on_next_click(self):
+        if self.wellNumber == 96:
+            return
+
+        self.wellNumber += 1
+        self.combinationTab.rightWidget.listWidget.clear()
+        if self.wellNumber in self.combosDictionary:
+            comboPartList = self.combosDictionary[self.wellNumber]
+            for index, item in enumerate(comboPartList):
+                part = ps.findPart(item)
+                self.combinationTab.rightWidget.listWidget.addItem(str(index + 1) + '. '
+                                                        + item + ' (' + part.getType() + ')')
+
+        font = QFont()
+        font.setPixelSize(14)
+        font.setPointSize(14)
+        font.setBold(True)
+
+        self.combinationTab.leftWidget.wellLabel = QLabel('Well #' + str(self.wellNumber))
+        self.combinationTab.leftWidget.wellLabel.setFont(font)
+        self.combinationTab.leftWidget.layout.removeRow(0)
+        self.combinationTab.leftWidget.layout.insertRow(0, self.combinationTab.leftWidget.wellLabel)
+        self.combinationTab.leftWidget.setLayout(self.combinationTab.leftWidget.layout)
+
+    @pyqtSlot()
+    def on_back_click(self):
+        if self.wellNumber == 1:
+            return
+
+        self.wellNumber -= 1
+        self.combinationTab.rightWidget.listWidget.clear()
+        if self.wellNumber in self.combosDictionary:
+            comboPartList = self.combosDictionary[self.wellNumber]
+            for index, item in enumerate(comboPartList):
+                part = ps.findPart(item)
+                self.combinationTab.rightWidget.listWidget.addItem(str(index + 1) + '. '
+                                                        + item + ' (' + part.getType() + ')')
+
+        font = QFont()
+        font.setPixelSize(14)
+        font.setPointSize(14)
+        font.setBold(True)
+
+        self.combinationTab.leftWidget.wellLabel = QLabel('Well #' + str(self.wellNumber))
+        self.combinationTab.leftWidget.wellLabel.setFont(font)
+        self.combinationTab.leftWidget.layout.removeRow(0)
+        self.combinationTab.leftWidget.layout.insertRow(0, self.combinationTab.leftWidget.wellLabel)
+        self.combinationTab.leftWidget.setLayout(self.combinationTab.leftWidget.layout)
+
+    @pyqtSlot()
+    def on_final_click(self):
+        self.tabs.setCurrentIndex(3)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
