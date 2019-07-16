@@ -19,21 +19,6 @@
             "Part Name": "adasd",
             "Type": "Terminator",
             "Volume": "3"
-        },
-        {
-            "Part Name": "asdas",
-            "Type": "Promoter",
-            "Volume": "3"
-        },
-        {
-            "Part Name": "apple",
-            "Type": "CDS",
-            "Volume": "3"
-        },
-        {
-            "Part Name": "applepie",
-            "Type": "Terminator",
-            "Volume": "4"
         }
     ]
 }

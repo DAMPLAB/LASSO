@@ -1,13 +1,23 @@
 import part
 import json
+from sbol import *
+
+typeDictionary = {'Promoter' : SO_PROMOTER, 'Terminator' : SO_TERMINATOR, 'CDS' : SO_CDS, 'Insulator' : 'http://identifiers.org/so/SO_0000627'}
+
 
 class PartStore:
     def __init__(self):
         self.parts = []
+        self.componentDefinitions = []
 
     def addPart(self, name, type, volume):
         mypart = part.Part(name, type, volume)
         self.parts.append(mypart)
+
+        cd = ComponentDefinition(name)
+
+        cd.roles = typeDictionary[type]
+        self.componentDefinitions.append(cd)
 
     def findPart(self,name):
         thepart = None
@@ -24,6 +34,7 @@ class PartStore:
                 break
 
         del self.parts[removeIndex]
+        del self.componentDefinitions[removeIndex]
 
     def loadJSON(self, filename):
         with open(filename) as json_file:
@@ -31,6 +42,10 @@ class PartStore:
             for jsonPart in existingParts['Parts']:
                 newpart = part.Part(jsonPart['Part Name'],jsonPart['Type'],jsonPart['Volume'])
                 self.parts.append(newpart)
+                cd = ComponentDefinition(jsonPart['Part Name'])
+                cd.roles = typeDictionary[jsonPart['Type']]
+                self.componentDefinitions.append(cd)
+
         return self.parts
 
     def saveJSON(self, filename):

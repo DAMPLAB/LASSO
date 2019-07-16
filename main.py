@@ -5,6 +5,12 @@ from PyQt5.QtGui import *
 from PyQt5 import QtCore
 import partstore
 
+import os
+
+# CURRENTDIR = os.path.dirname(os.path.abspath(__file__))
+# IMAGESDIR = os.path.join(CURRENTDIR, 'images')
+# sys.path.insert(0, IMAGESDIR)
+
 ps = partstore.PartStore()
 
 
@@ -143,9 +149,16 @@ class TableWidget(QWidget):
         self.combinationTab.rightWidget = QWidget()
 
         self.combinationTab.pictureWidget = QLabel()
-        sbolImage = QPixmap('testimage.png')
-        self.combinationTab.pictureWidget.setPixmap(sbolImage)
-        self.combinationTab.pictureWidget.resize(sbolImage.width(),sbolImage.height())
+        sbolLine = QImage('bigblackline.png')
+        # self.combinationTab.pictureWidget.setPixmap(sbolLine)
+        self.combinationTab.pictureWidget.resize(sbolLine.width(),sbolLine.height())
+
+        painter = QPainter()
+        sbolFirst = QImage('insulator.png')
+        painter.begin(sbolLine)
+        painter.drawImage(self.combinationTab.pictureWidget.rect().center().x(), self.combinationTab.pictureWidget.rect().center().y() - 45, sbolFirst)
+        painter.end()
+        self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(sbolLine))
 
         self.combinationTab.toggleButtons = QWidget()
         self.combinationTab.toggleButtons.layout = QHBoxLayout(self.combinationTab.toggleButtons)
@@ -328,23 +341,20 @@ class TableWidget(QWidget):
                     volume = item.text(2)
                     ps.removePart(name,type,volume)
                     ps.saveJSON('registry.json')
+                    self.partNameArray.remove(name)
+                    self.combinationTab.leftWidget.dropdown.clear()
+                    self.combinationTab.leftWidget.dropdown.addItems(self.partNameArray)
             elif self.tabs.currentIndex() == 2 and self.combinationTab.rightWidget.listWidget.count() != 0:
                 comboPartList = self.combosDictionary[self.wellNumber]
                 row = self.combinationTab.rightWidget.listWidget.currentRow()
                 item = self.combinationTab.rightWidget.listWidget.takeItem(row)
                 del comboPartList[row]
 
-                #self.combinationTab.rightWidget.listWidget.clear()
-
                 for index, item in enumerate(comboPartList):
                     listWidgetItem = self.combinationTab.rightWidget.listWidget.item(index)
                     listWidgetItemText = listWidgetItem.text().split('.')[1]
                     listWidgetItem.setText(str(index + 1) + '.' + listWidgetItemText)
-                    #part = ps.findPart(item)
-                    #self.combinationTab.rightWidget.listWidget.addItem(str(index + 1) + '. '
-                                                            #+ item + ' (' + part.getType() + ')')
 
-                print(self.combosDictionary)
 
 
 
