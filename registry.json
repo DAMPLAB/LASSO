@@ -1,89 +1,39 @@
 {
     "Parts": [
         {
-            "Part Name": "weqe",
+            "Part Name": "dfsdf",
             "Type": "CDS",
             "Volume": "3"
         },
         {
-            "Part Name": "weqe",
+            "Part Name": "dfsaasddf",
             "Type": "CDS",
             "Volume": "3"
         },
         {
-            "Part Name": "weqe",
+            "Part Name": "dfsaqeqweasddf",
             "Type": "CDS",
-            "Volume": "44"
+            "Volume": "3"
         },
         {
-            "Part Name": "wee",
-            "Type": "Insulator",
-            "Volume": "22"
+            "Part Name": "adasd",
+            "Type": "Terminator",
+            "Volume": "3"
         },
         {
-            "Part Name": "qeqwe",
-            "Type": "Insulator",
-            "Volume": "q22"
+            "Part Name": "asdas",
+            "Type": "Promoter",
+            "Volume": "3"
         },
         {
-            "Part Name": "drfghj",
+            "Part Name": "apple",
             "Type": "CDS",
+            "Volume": "3"
+        },
+        {
+            "Part Name": "applepie",
+            "Type": "Terminator",
             "Volume": "4"
-        },
-        {
-            "Part Name": "fds",
-            "Type": "CDS",
-            "Volume": "5"
-        },
-        {
-            "Part Name": "heloooo",
-            "Type": "CDS",
-            "Volume": "4343"
-        },
-        {
-            "Part Name": "heloooo",
-            "Type": "CDS",
-            "Volume": "4343"
-        },
-        {
-            "Part Name": "heloooo",
-            "Type": "CDS",
-            "Volume": "4343"
-        },
-        {
-            "Part Name": "heloooo",
-            "Type": "CDS",
-            "Volume": "4343"
-        },
-        {
-            "Part Name": "heloooo",
-            "Type": "CDS",
-            "Volume": "4343"
-        },
-        {
-            "Part Name": "heloooo",
-            "Type": "CDS",
-            "Volume": "4343"
-        },
-        {
-            "Part Name": "heloooo",
-            "Type": "CDS",
-            "Volume": "4343"
-        },
-        {
-            "Part Name": "heloooo",
-            "Type": "CDS",
-            "Volume": "4343"
-        },
-        {
-            "Part Name": "",
-            "Type": "CDS",
-            "Volume": ""
-        },
-        {
-            "Part Name": "ilj;ljllbouhll",
-            "Type": "Insulator",
-            "Volume": "100"
         }
     ]
 }

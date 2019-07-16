@@ -16,6 +16,15 @@ class PartStore:
                 thepart = part
         return thepart
 
+    def removePart(self, name, type, volume):
+        removeIndex = -1
+        for index, partIter in enumerate(self.parts):
+            if partIter.getName() == name and partIter.getType() == type and partIter.getVolume() == volume:
+                removeIndex = index
+                break
+
+        del self.parts[removeIndex]
+
     def loadJSON(self, filename):
         with open(filename) as json_file:
             existingParts = json.load(json_file)

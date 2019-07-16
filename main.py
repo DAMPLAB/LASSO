@@ -1,11 +1,12 @@
 import sys
-from PyQt5.QtWidgets import * #QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QPushButton, QAction, QLabel, QGridLayout
+from PyQt5.QtWidgets import * #QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QLabel, QPushButton, QTreeWidget  QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QPushButton, QAction, QLabel, QGridLayout
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import *
 from PyQt5 import QtCore
 import partstore
 
 ps = partstore.PartStore()
+
 
 class MainWindow(QMainWindow):
 
@@ -24,11 +25,6 @@ class MainWindow(QMainWindow):
 
         self.show()
 
-    # def resizeEvent(self, event):
-    #     print(self.geometry())
-    #     QMainWindow.resizeEvent(self, event)
-
-
 
 class TableWidget(QWidget):
 
@@ -42,8 +38,6 @@ class TableWidget(QWidget):
         self.registryTab = QWidget()
         self.combinationTab = QWidget()
         self.finalTab = QWidget()
-
-        # self.homeTab.resize(parent.geometry().width() - 22, parent.geometry().height() - 48)
 
         # Adding tabs
         self.tabs.addTab(self.homeTab, 'Home')
@@ -59,7 +53,6 @@ class TableWidget(QWidget):
         # Connecting buttons
         self.registryButton.clicked.connect(self.on_registry_click)
         self.combosButton.clicked.connect(self.on_combos_click)
-
 
         # Creating Home Tab
         self.homeTab.layout = QVBoxLayout(self)
@@ -78,11 +71,12 @@ class TableWidget(QWidget):
         self.homeTab.layout.setAlignment(QtCore.Qt.AlignCenter)
         self.homeTab.setLayout(self.homeTab.layout)
 
-
         listofstuff = ['CDS', 'Insulator', 'Promoter', 'Terminator']
         # Promoter, Terminator, CDS, Insulator,
 
-        # Registry Tab
+        """
+        Registry Tab
+        """
         self.registryTab.layout = QHBoxLayout(self.registryTab)
         self.registryTab.leftWidget = QWidget()
         self.registryTab.rightWidget = QTreeWidget()
@@ -135,14 +129,9 @@ class TableWidget(QWidget):
         self.registryTab.setLayout(self.registryTab.layout)
 
 
-
-
-
-
-
-
-        # Combos Tab
-
+        """
+        Combination Tab
+        """
         self.wellNumber = 1
         self.combosDictionary = {}
 
@@ -150,7 +139,6 @@ class TableWidget(QWidget):
         self.combinationTab.topWidget = QWidget()
 
         self.combinationTab.layout = QHBoxLayout(self.combinationTab.topWidget)
-        # self.combinationTab.topWidget.layout = QHBoxLayout(self.combinationTab)
         self.combinationTab.leftWidget = QWidget()
         self.combinationTab.rightWidget = QWidget()
 
@@ -164,25 +152,19 @@ class TableWidget(QWidget):
         self.combinationTab.toggleButtons.backButton = QPushButton('Back')
         self.combinationTab.toggleButtons.nextButton = QPushButton('Next')
         self.combinationTab.toggleButtons.finalButton = QPushButton('Final')
+        self.combinationTab.toggleButtons.finalButton.setStyleSheet('background-color: #e58f24')
 
         self.combinationTab.toggleButtons.backButton.clicked.connect(self.on_back_click)
         self.combinationTab.toggleButtons.nextButton.clicked.connect(self.on_next_click)
         self.combinationTab.toggleButtons.finalButton.clicked.connect(self.on_final_click)
-
 
         self.combinationTab.toggleButtons.layout.addWidget(self.combinationTab.toggleButtons.backButton)
         self.combinationTab.toggleButtons.layout.addWidget(self.combinationTab.toggleButtons.nextButton)
         self.combinationTab.toggleButtons.layout.addWidget(self.combinationTab.toggleButtons.finalButton)
 
 
-
-
-        # self.combinationTab.rightWidget = QListWidget()
-
-
         self.combinationTab.leftWidget.layout = QFormLayout()
         self.combinationTab.rightWidget.layout = QVBoxLayout()
-
 
         sizePolicy = QSizePolicy(QSizePolicy.Ignored,QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(1)
@@ -226,8 +208,6 @@ class TableWidget(QWidget):
         self.combinationTab.layout.addWidget(self.combinationTab.rightWidget, stretch = 0)
 
 
-        # self.combinationTab.layout.setSpacing(0)
-        # self.combinationTab.layout.addStretch()
         self.combinationTab.topLayout.addWidget(self.combinationTab.topWidget)
         self.combinationTab.topLayout.addWidget(self.combinationTab.pictureWidget)
         self.combinationTab.topLayout.addWidget(self.combinationTab.toggleButtons)
@@ -235,11 +215,6 @@ class TableWidget(QWidget):
         self.combinationTab.topWidget.setLayout(self.combinationTab.layout)
 
         self.combinationTab.setLayout(self.combinationTab.topLayout)
-
-
-
-
-
 
         self.layout.addWidget(self.tabs)
         self.setLayout(self.layout)
@@ -275,6 +250,9 @@ class TableWidget(QWidget):
     def on_add_part_click(self):
         if self.wellNumber not in self.combosDictionary:
             self.combosDictionary[self.wellNumber] = []
+
+        if len(self.combosDictionary[self.wellNumber]) == 10:
+            return
 
         nextPart =  self.combinationTab.leftWidget.dropdown.currentText()
         part = ps.findPart(nextPart)
@@ -339,129 +317,39 @@ class TableWidget(QWidget):
     def on_final_click(self):
         self.tabs.setCurrentIndex(3)
 
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Backspace:
+            if self.tabs.currentIndex() == 1 and self.registryTab.rightWidget.topLevelItemCount() != 0:
+                treeParent = self.registryTab.rightWidget.invisibleRootItem()
+                for item in self.registryTab.rightWidget.selectedItems():
+                    treeParent.removeChild(item)
+                    name = item.text(0)
+                    type = item.text(1)
+                    volume = item.text(2)
+                    ps.removePart(name,type,volume)
+                    ps.saveJSON('registry.json')
+            elif self.tabs.currentIndex() == 2 and self.combinationTab.rightWidget.listWidget.count() != 0:
+                comboPartList = self.combosDictionary[self.wellNumber]
+                row = self.combinationTab.rightWidget.listWidget.currentRow()
+                item = self.combinationTab.rightWidget.listWidget.takeItem(row)
+                del comboPartList[row]
+
+                #self.combinationTab.rightWidget.listWidget.clear()
+
+                for index, item in enumerate(comboPartList):
+                    listWidgetItem = self.combinationTab.rightWidget.listWidget.item(index)
+                    listWidgetItemText = listWidgetItem.text().split('.')[1]
+                    listWidgetItem.setText(str(index + 1) + '.' + listWidgetItemText)
+                    #part = ps.findPart(item)
+                    #self.combinationTab.rightWidget.listWidget.addItem(str(index + 1) + '. '
+                                                            #+ item + ' (' + part.getType() + ')')
+
+                print(self.combosDictionary)
+
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = MainWindow()
     app.setStyle('Fusion')
     app.exec_()
-
-
-
-
-
-# import sys
-# from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget,QVBoxLayout
-# from PyQt5.QtGui import QIcon
-# from PyQt5.QtCore import pyqtSlot
-#
-# class App(QMainWindow):
-#
-#     def __init__(self):
-#         super().__init__()
-#         self.title = 'PyQt5 tabs - pythonspot.com'
-#         self.left = 0
-#         self.top = 0
-#         self.width = 300
-#         self.height = 200
-#         self.setWindowTitle(self.title)
-#         self.setGeometry(self.left, self.top, self.width, self.height)
-#
-#         self.table_widget = MyTableWidget(self)
-#         self.setCentralWidget(self.table_widget)
-#
-#         self.show()
-#
-# class MyTableWidget(QWidget):
-#
-#     def __init__(self, parent):
-#         super(QWidget, self).__init__(parent)
-#         self.layout = QVBoxLayout(self)
-#
-#         # Initialize tab screen
-#         self.tabs = QTabWidget()
-#         self.tab1 = QWidget()
-#         self.tab2 = QWidget()
-#         self.tabs.resize(300,200)
-#
-#         # Add tabs
-#         self.tabs.addTab(self.tab1,"Tab 1")
-#         self.tabs.addTab(self.tab2,"Tab 2")
-#
-#         # Create first tab
-#         self.tab1.layout = QVBoxLayout(self)
-#         self.pushButton1 = QPushButton("PyQt5 button")
-#         self.tab1.layout.addWidget(self.pushButton1)
-#         self.tab1.setLayout(self.tab1.layout)
-#
-#         # Add tabs to widget
-#         self.layout.addWidget(self.tabs)
-#         self.setLayout(self.layout)
-#
-#     @pyqtSlot()
-#     def on_click(self):
-#         print("\n")
-#         for currentQTableWidgetItem in self.tableWidget.selectedItems():
-#             print(currentQTableWidgetItem.row(), currentQTableWidgetItem.column(), currentQTableWidgetItem.text())
-#
-# if __name__ == '__main__':
-#     app = QApplication(sys.argv)
-#     app.setStyle('Fusion')
-#     ex = App()
-#     sys.exit(app.exec_())
-
-
-
-# self.homeTitle = QLabel(self.homeTab)
-# self.homeTitle.setText('OT2 GUI Bullshit')
-#
-# xCoord = self.homeTab.geometry().center().x() - (self.homeTitle.frameGeometry().width() / 2)
-# yCoord = self.homeTab.geometry().center().y() - (self.homeTitle.frameGeometry().height() / 2)
-#
-# self.homeTitle.move(xCoord, yCoord)
-#
-#
-# self.registryButton = QPushButton(self.homeTab)
-# self.registryButton.setText('Go to Parts Registry')
-# self.combosButton = QPushButton(self.homeTab)
-# self.combosButton.setText('Create Combination')
-#
-# xCoordButton = self.homeTab.geometry().center().x() - (self.registryButton.geometry().width() / 2)
-# yCoordButton = self.homeTab.geometry().center().y() - (self.registryButton.geometry().height() / 2)
-#
-# self.registryButton.move(xCoordButton, yCoordButton + 40)
-# self.combosButton.move(xCoordButton, yCoordButton + 80)
-
-
-
-
-#
-# self.registryButton.setMinimumWidth(10)
-# self.combosButton.setMinimumWidth(10)
-#
-#
-#
-# self.homeTab.layout.addWidget(self.homeTitle, 0, 0)
-# self.homeTab.layout.addWidget(self.registryButton, 1, 2)
-# self.homeTab.layout.addWidget(self.combosButton, 6, 5)
-
-# print(self.geometry())
-
-# self.homeTab.setLayout(self.homeTab.layout)
-
-
-# def resizeEvent(self, event):
-#     print(self.homeTab.frameGeometry())
-#     xCoord = self.homeTab.geometry().center().x() - (self.homeTitle.frameGeometry().width() / 2)
-#     yCoord = self.homeTab.geometry().center().y() - (self.homeTitle.frameGeometry().height() / 2)
-#     self.homeTitle.move(xCoord, yCoord)
-#     print(xCoord)
-#     print(yCoord)
-#
-#     xCoordButton = self.homeTab.geometry().center().x() - (self.registryButton.geometry().width() / 2)
-#     yCoordButton = self.homeTab.geometry().center().y() - (self.registryButton.geometry().height() / 2)
-#
-#     self.registryButton.move(xCoordButton, yCoordButton + 40)
-#     self.combosButton.move(xCoordButton, yCoordButton + 80)
-#
-#     # self.homeTitle.move(self.frameGeometry().center().x() - ((self.homeTitle.frameGeometry().width()) / 2), self.frameGeometry().center().y() - (float(self.homeTitle.frameGeometry().height()) / 2) - 20)
-#     QWidget.resizeEvent(self, event)
