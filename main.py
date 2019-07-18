@@ -91,7 +91,7 @@ class TableWidget(QWidget):
         self.partNameArray = []
         for currpart in partsArray:
             partName = currpart.getName()
-            self.partNameArray.append(partName)
+            self.partNameArray.append(partName + ' (' + currpart.getType() + ')')
             typeName = currpart.getType()
             volumeName = currpart.getVolume()
 
@@ -149,16 +149,9 @@ class TableWidget(QWidget):
         self.combinationTab.rightWidget = QWidget()
 
         self.combinationTab.pictureWidget = QLabel()
-        sbolLine = QImage('bigblackline.png')
-        # self.combinationTab.pictureWidget.setPixmap(sbolLine)
-        self.combinationTab.pictureWidget.resize(sbolLine.width(),sbolLine.height())
-
-        painter = QPainter()
-        sbolFirst = QImage('insulator.png')
-        painter.begin(sbolLine)
-        painter.drawImage(self.combinationTab.pictureWidget.rect().center().x(), self.combinationTab.pictureWidget.rect().center().y() - 45, sbolFirst)
-        painter.end()
-        self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(sbolLine))
+        self.sbolLine = QImage('bigblackline.png')
+        self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
+        self.combinationTab.pictureWidget.resize(self.sbolLine.width(),self.sbolLine.height())
 
         self.combinationTab.toggleButtons = QWidget()
         self.combinationTab.toggleButtons.layout = QHBoxLayout(self.combinationTab.toggleButtons)
@@ -243,12 +236,15 @@ class TableWidget(QWidget):
 
     @pyqtSlot()
     def on_add_click(self):
+
         formText = self.registryTab.leftWidget.partBox.text()
+        if formText == '':
+            return
         comboText = self.registryTab.leftWidget.dropdown.currentText()
         volumeText = self.registryTab.leftWidget.volumeBox.text()
 
-        self.partNameArray.append(formText)
-        self.combinationTab.leftWidget.dropdown.addItem(formText)
+        self.partNameArray.append(formText + ' (' + comboText + ')')
+        self.combinationTab.leftWidget.dropdown.addItem(formText + ' (' + comboText + ')')
 
         treeItem = QTreeWidgetItem()
         treeItem.setText(0, formText)
@@ -264,10 +260,10 @@ class TableWidget(QWidget):
         if self.wellNumber not in self.combosDictionary:
             self.combosDictionary[self.wellNumber] = []
 
-        if len(self.combosDictionary[self.wellNumber]) == 10:
+        if len(self.combosDictionary[self.wellNumber]) == 10 or len(self.partNameArray) == 0:
             return
 
-        nextPart =  self.combinationTab.leftWidget.dropdown.currentText()
+        nextPart =  self.combinationTab.leftWidget.dropdown.currentText().split('(')[0].strip()
         part = ps.findPart(nextPart)
 
         comboPartList = self.combosDictionary[self.wellNumber]
@@ -275,6 +271,25 @@ class TableWidget(QWidget):
 
         self.combinationTab.rightWidget.listWidget.addItem(str(len(comboPartList)) + '. '
                                                 + nextPart + ' (' + part.getType() + ')')
+
+        #creating the images
+        painter = QPainter()
+        typeImage = part.getType()
+        imageName = typeImage.lower() + '.png'
+        numParts = len(self.combosDictionary[self.wellNumber])
+        distanceLeft = 100 + 60*(numParts - 1)
+        sbolImage = QImage(imageName)
+        painter.begin(self.sbolLine)
+        if imageName == 'cds.png':
+            painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 18, sbolImage)
+        elif imageName == 'insulator.png':
+            painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 45, sbolImage)
+        elif imageName == 'promoter.png':
+            painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 55, sbolImage)
+        elif imageName == 'terminator.png':
+             painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 48, sbolImage)
+        painter.end()
+        self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
 
     @pyqtSlot()
     def on_next_click(self):
@@ -337,11 +352,11 @@ class TableWidget(QWidget):
                 for item in self.registryTab.rightWidget.selectedItems():
                     treeParent.removeChild(item)
                     name = item.text(0)
-                    type = item.text(1)
+                    Type = item.text(1)
                     volume = item.text(2)
-                    ps.removePart(name,type,volume)
+                    ps.removePart(name,Type,volume)
                     ps.saveJSON('registry.json')
-                    self.partNameArray.remove(name)
+                    self.partNameArray.remove(name + ' (' + Type + ')')
                     self.combinationTab.leftWidget.dropdown.clear()
                     self.combinationTab.leftWidget.dropdown.addItems(self.partNameArray)
             elif self.tabs.currentIndex() == 2 and self.combinationTab.rightWidget.listWidget.count() != 0:
