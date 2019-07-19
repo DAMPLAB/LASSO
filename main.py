@@ -1,4 +1,5 @@
 import sys
+import csv
 from PyQt5.QtWidgets import * #QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QLabel, QPushButton, QTreeWidget  QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QPushButton, QAction, QLabel, QGridLayout
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import *
@@ -52,6 +53,10 @@ class TableWidget(QWidget):
         self.tabs.addTab(self.finalTab, 'Final')
 
         # Creating widgets for Home tab
+        self.homePicture = QLabel()
+        image = QImage('cowboyhat.png')
+        self.homePicture.setPixmap(QPixmap.fromImage(image))
+
         self.homeTitle = QLabel('LASSO')
         self.registryButton = QPushButton('Go to Parts Registry')
         self.combosButton = QPushButton('Create Combination')
@@ -62,6 +67,7 @@ class TableWidget(QWidget):
 
         # Creating Home Tab
         self.homeTab.layout = QVBoxLayout(self)
+        self.homeTab.layout.addWidget(self.homePicture)
         self.homeTab.layout.addWidget(self.homeTitle)
         self.homeTab.layout.addWidget(self.registryButton)
         self.homeTab.layout.addWidget(self.combosButton)
@@ -70,6 +76,8 @@ class TableWidget(QWidget):
         font.setPixelSize(50)
         font.setPointSize(50)
         font.setBold(True)
+
+        self.homePicture.setAlignment(QtCore.Qt.AlignCenter)
 
         self.homeTitle.setFont(font)
         self.homeTitle.setAlignment(QtCore.Qt.AlignCenter)
@@ -224,8 +232,54 @@ class TableWidget(QWidget):
 
         self.combinationTab.setLayout(self.combinationTab.topLayout)
 
+        """
+        Final Tab
+        """
+        self.finalTab.widget = QWidget()
+        self.finalTab.layout = QHBoxLayout()
+
+        self.finalTab.leftWidget = QWidget()
+        self.finalTab.leftWidget.layout = QVBoxLayout()
+        self.finalTab.leftWidget.label = QLabel('Input Plate')
+        self.finalTab.leftWidget.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.finalTab.leftWidget.table = QTableWidget(12, 8, self.finalTab.leftWidget)
+
+        # leftHeader = self.finalTab.leftWidget.table.horizontalHeader()
+        #leftHeader.setSectionResizeMode(0,QHeaderView.ResizeToContents)
+
+        self.finalTab.leftWidget.layout.addWidget(self.finalTab.leftWidget.label)
+        self.finalTab.leftWidget.layout.addWidget(self.finalTab.leftWidget.table)
+        self.finalTab.leftWidget.setLayout(self.finalTab.leftWidget.layout)
+
+
+        self.finalTab.rightWidget = QWidget()
+        self.finalTab.rightWidget.layout = QVBoxLayout()
+        self.finalTab.rightWidget.label = QLabel('Output Plate')
+        self.finalTab.rightWidget.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.finalTab.rightWidget.table = QTableWidget(12, 8, self.finalTab.rightWidget)
+
+        self.finalTab.rightWidget.layout.addWidget(self.finalTab.rightWidget.label)
+        self.finalTab.rightWidget.layout.addWidget(self.finalTab.rightWidget.table)
+        self.finalTab.rightWidget.setLayout(self.finalTab.rightWidget.layout)
+
+        self.finalTab.layout.addWidget(self.finalTab.leftWidget)
+        self.finalTab.layout.addWidget(self.finalTab.rightWidget)
+        self.finalTab.setLayout(self.finalTab.layout)
+
+
+
+
+
+
+
+
+
+
         self.layout.addWidget(self.tabs)
         self.setLayout(self.layout)
+
+
+
 
 
     @pyqtSlot()
@@ -238,13 +292,13 @@ class TableWidget(QWidget):
 
     @pyqtSlot()
     def on_add_click(self):
-
         formText = self.registryTab.leftWidget.partBox.text()
         if formText == '':
             return
         comboText = self.registryTab.leftWidget.dropdown.currentText()
         volumeText = self.registryTab.leftWidget.volumeBox.text()
-
+        if volumeText.isnumeric() is False or volumeText == '':
+            return
         self.partNameArray.append(formText + ' (' + comboText + ')')
         self.combinationTab.leftWidget.dropdown.addItem(formText + ' (' + comboText + ')')
 
@@ -301,7 +355,8 @@ class TableWidget(QWidget):
     def on_next_click(self):
         if self.wellNumber == 96:
             return
-
+        if self.wellNumber not in self.combosDictionary or len(self.combosDictionary[self.wellNumber]) == 0:
+            return
         self.wellNumber += 1
         self.combinationTab.rightWidget.listWidget.clear()
         if self.wellNumber in self.combosDictionary:
@@ -400,6 +455,15 @@ class TableWidget(QWidget):
     def on_final_click(self):
         self.tabs.setCurrentIndex(3)
 
+        #creating CSV files
+        with open('test.csv', 'w', newline = '') as csv_file:
+            writer = csv.writer(csv_file, delimiter=',')
+            for key in range(1, len(self.combosDictionary) + 1):
+                partArray = self.combosDictionary[key].copy()
+                partArray.insert(0, 'Well #' + str(key))
+                writer.writerow(partArray)
+
+
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Backspace:
             if self.tabs.currentIndex() == 1 and self.registryTab.rightWidget.topLevelItemCount() != 0:
@@ -446,7 +510,7 @@ class TableWidget(QWidget):
                     painter.end()
                     partNumber += 1
                     self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
-    
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

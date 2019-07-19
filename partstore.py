@@ -25,7 +25,6 @@ class PartStore:
                 break
 
         del self.parts[removeIndex]
-        del self.componentDefinitions[removeIndex]
 
     def loadJSON(self, filename):
         with open(filename) as json_file:
