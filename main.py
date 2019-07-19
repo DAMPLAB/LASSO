@@ -140,6 +140,7 @@ class TableWidget(QWidget):
         """
         self.wellNumber = 1
         self.combosDictionary = {}
+        self.imageDictionary = {}
 
         self.combinationTab.topLayout = QVBoxLayout(self.combinationTab)
         self.combinationTab.topWidget = QWidget()
@@ -150,6 +151,7 @@ class TableWidget(QWidget):
 
         self.combinationTab.pictureWidget = QLabel()
         self.sbolLine = QImage('bigblackline.png')
+        self.emptyImage = QImage('emptyImage.png')
         self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
         self.combinationTab.pictureWidget.resize(self.sbolLine.width(),self.sbolLine.height())
 
@@ -259,6 +261,8 @@ class TableWidget(QWidget):
     def on_add_part_click(self):
         if self.wellNumber not in self.combosDictionary:
             self.combosDictionary[self.wellNumber] = []
+            self.imageDictionary[self.wellNumber] = []
+
 
         if len(self.combosDictionary[self.wellNumber]) == 10 or len(self.partNameArray) == 0:
             return
@@ -288,8 +292,10 @@ class TableWidget(QWidget):
             painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 55, sbolImage)
         elif imageName == 'terminator.png':
              painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 48, sbolImage)
-        painter.end()
+
         self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
+
+        self.imageDictionary[self.wellNumber].append(imageName)
 
     @pyqtSlot()
     def on_next_click(self):
@@ -316,6 +322,31 @@ class TableWidget(QWidget):
         self.combinationTab.leftWidget.layout.insertRow(0, self.combinationTab.leftWidget.wellLabel)
         self.combinationTab.leftWidget.setLayout(self.combinationTab.leftWidget.layout)
 
+        self.sbolLine = QImage('bigblackline.png')
+        self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
+        if self.wellNumber in self.combosDictionary:
+            imagesList = self.imageDictionary[self.wellNumber]
+            painter = QPainter()
+            partNumber = 0
+            for imageName in imagesList:
+                distanceLeft = 100 + 60*(partNumber)
+                sbolImage = QImage(imageName)
+                painter.begin(self.sbolLine)
+                if imageName == 'cds.png':
+                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 18, sbolImage)
+                elif imageName == 'insulator.png':
+                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 45, sbolImage)
+                elif imageName == 'promoter.png':
+                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 55, sbolImage)
+                elif imageName == 'terminator.png':
+                     painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 48, sbolImage)
+                painter.end()
+                partNumber += 1
+                self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
+
+
+
+
     @pyqtSlot()
     def on_back_click(self):
         if self.wellNumber == 1:
@@ -341,6 +372,30 @@ class TableWidget(QWidget):
         self.combinationTab.leftWidget.layout.insertRow(0, self.combinationTab.leftWidget.wellLabel)
         self.combinationTab.leftWidget.setLayout(self.combinationTab.leftWidget.layout)
 
+        self.sbolLine = QImage('bigblackline.png')
+        self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
+        if self.wellNumber in self.combosDictionary:
+            imagesList = self.imageDictionary[self.wellNumber]
+            painter = QPainter()
+            partNumber = 0
+            for imageName in imagesList:
+                distanceLeft = 100 + 60*(partNumber)
+                sbolImage = QImage(imageName)
+                painter.begin(self.sbolLine)
+                if imageName == 'cds.png':
+                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 18, sbolImage)
+                elif imageName == 'insulator.png':
+                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 45, sbolImage)
+                elif imageName == 'promoter.png':
+                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 55, sbolImage)
+                elif imageName == 'terminator.png':
+                     painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 48, sbolImage)
+                painter.end()
+                partNumber += 1
+                self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
+
+
+
     @pyqtSlot()
     def on_final_click(self):
         self.tabs.setCurrentIndex(3)
@@ -361,17 +416,37 @@ class TableWidget(QWidget):
                     self.combinationTab.leftWidget.dropdown.addItems(self.partNameArray)
             elif self.tabs.currentIndex() == 2 and self.combinationTab.rightWidget.listWidget.count() != 0:
                 comboPartList = self.combosDictionary[self.wellNumber]
+                imagesList = self.imageDictionary[self.wellNumber]
                 row = self.combinationTab.rightWidget.listWidget.currentRow()
                 item = self.combinationTab.rightWidget.listWidget.takeItem(row)
                 del comboPartList[row]
+                del imagesList[row]
 
                 for index, item in enumerate(comboPartList):
                     listWidgetItem = self.combinationTab.rightWidget.listWidget.item(index)
                     listWidgetItemText = listWidgetItem.text().split('.')[1]
                     listWidgetItem.setText(str(index + 1) + '.' + listWidgetItemText)
 
-
-
+                self.sbolLine = QImage('bigblackline.png')
+                self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
+                painter = QPainter()
+                partNumber = 0
+                for imageName in imagesList:
+                    distanceLeft = 100 + 60*(partNumber)
+                    sbolImage = QImage(imageName)
+                    painter.begin(self.sbolLine)
+                    if imageName == 'cds.png':
+                        painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 18, sbolImage)
+                    elif imageName == 'insulator.png':
+                        painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 45, sbolImage)
+                    elif imageName == 'promoter.png':
+                        painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 55, sbolImage)
+                    elif imageName == 'terminator.png':
+                         painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 48, sbolImage)
+                    painter.end()
+                    partNumber += 1
+                    self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
+    
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
