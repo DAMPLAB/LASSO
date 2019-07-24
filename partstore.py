@@ -1,14 +1,18 @@
 import part
 import json
 from sbol import *
-
+import csv
+# ore
 class PartStore:
     def __init__(self):
         self.parts = []
 
     def addPart(self, name, type, volume):
         mypart = part.Part(name, type, volume)
+        print([i.getName() for i in self.parts])
         self.parts.append(mypart)
+        self.parts.sort()
+        print([i.getName() for i in self.parts])
 
     def findPart(self,name):
         thepart = None
@@ -50,3 +54,7 @@ class PartStore:
 
         with open(filename, 'w') as json_file:
             json.dump(jsonDictionary, json_file, indent=4)
+
+
+    def generatePartList(self):
+        return [str(part.getName() + ' (' + part.getType() +')') for part in self.parts]

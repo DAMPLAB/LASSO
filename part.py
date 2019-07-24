@@ -3,6 +3,7 @@ class Part:
         self.name = name
         self.type = type
         self.volume = volume
+        self.remainingVolume = volume
 
     def getName(self):
         return self.name
@@ -13,6 +14,9 @@ class Part:
     def getVolume(self):
         return self.volume
 
+    def getRemainingVolume(self):
+        return self.remainingVolume
+
     def setName(self, name):
         self.name = name
 
@@ -21,3 +25,15 @@ class Part:
 
     def setVolume(self, volume):
         self.volume = volume
+
+    def setRemainingVolume(self, volume):
+        self.remainingVolume = volume
+
+    def removeVolume(self, volume):
+        self.remainingVolume -= volume
+
+    def __lt__(self, other):
+        if self.type == other.type:
+            return self.name < other.name
+        else:
+            return self.type < other.type

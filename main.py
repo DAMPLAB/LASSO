@@ -8,9 +8,9 @@ import partstore
 
 import os
 
-# CURRENTDIR = os.path.dirname(os.path.abspath(__file__))
-# IMAGESDIR = os.path.join(CURRENTDIR, 'images')
-# sys.path.insert(0, IMAGESDIR)
+CURRENTDIR = os.path.dirname(os.path.abspath(__file__))
+IMAGESDIR = os.path.join(CURRENTDIR, 'images')
+sys.path.insert(0, IMAGESDIR)
 
 ps = partstore.PartStore()
 
@@ -54,7 +54,7 @@ class TableWidget(QWidget):
 
         # Creating widgets for Home tab
         self.homePicture = QLabel()
-        image = QImage('cowboyhat.png')
+        image = QImage(os.path.join(IMAGESDIR, 'cowboyhat.png'))
         self.homePicture.setPixmap(QPixmap.fromImage(image))
 
         self.homeTitle = QLabel('LASSO')
@@ -136,6 +136,9 @@ class TableWidget(QWidget):
         self.registryTab.rightWidget.setColumnWidth(1, columnWidth)
         self.registryTab.rightWidget.setColumnWidth(2, columnWidth)
 
+        self.registryTab.rightWidget.setSortingEnabled(True)
+        self.registryTab.rightWidget.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        self.registryTab.rightWidget.sortByColumn(1, QtCore.Qt.AscendingOrder)
 
 
         self.registryTab.layout.addWidget(self.registryTab.leftWidget)
@@ -158,8 +161,7 @@ class TableWidget(QWidget):
         self.combinationTab.rightWidget = QWidget()
 
         self.combinationTab.pictureWidget = QLabel()
-        self.sbolLine = QImage('bigblackline.png')
-        self.emptyImage = QImage('emptyImage.png')
+        self.sbolLine = QImage(os.path.join(IMAGESDIR, 'bigblackline.png'))
         self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
         self.combinationTab.pictureWidget.resize(self.sbolLine.width(),self.sbolLine.height())
 
@@ -295,12 +297,12 @@ class TableWidget(QWidget):
         formText = self.registryTab.leftWidget.partBox.text()
         if formText == '':
             return
+        if ps.findPart(formText) is not None:
+            return
         comboText = self.registryTab.leftWidget.dropdown.currentText()
         volumeText = self.registryTab.leftWidget.volumeBox.text()
         if volumeText.isnumeric() is False or volumeText == '':
             return
-        self.partNameArray.append(formText + ' (' + comboText + ')')
-        self.combinationTab.leftWidget.dropdown.addItem(formText + ' (' + comboText + ')')
 
         treeItem = QTreeWidgetItem()
         treeItem.setText(0, formText)
@@ -310,6 +312,13 @@ class TableWidget(QWidget):
 
         ps.addPart(formText, comboText, volumeText)
         ps.saveJSON('registry.json')
+
+        self.partNameArray = ps.generatePartList()
+        self.combinationTab.leftWidget.dropdown.clear()
+        self.combinationTab.leftWidget.dropdown.addItems(self.partNameArray)
+
+        self.registryTab.rightWidget.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        self.registryTab.rightWidget.sortByColumn(1, QtCore.Qt.AscendingOrder)
 
     @pyqtSlot()
     def on_add_part_click(self):
@@ -331,22 +340,12 @@ class TableWidget(QWidget):
                                                 + nextPart + ' (' + part.getType() + ')')
 
         #creating the images
-        painter = QPainter()
         typeImage = part.getType()
         imageName = typeImage.lower() + '.png'
         numParts = len(self.combosDictionary[self.wellNumber])
         distanceLeft = 100 + 60*(numParts - 1)
         sbolImage = QImage(imageName)
-        painter.begin(self.sbolLine)
-        if imageName == 'cds.png':
-            painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 18, sbolImage)
-        elif imageName == 'insulator.png':
-            painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 45, sbolImage)
-        elif imageName == 'promoter.png':
-            painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 55, sbolImage)
-        elif imageName == 'terminator.png':
-             painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 48, sbolImage)
-
+        self.imageDrawer(imageName, distanceLeft, sbolImage)
         self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
 
         self.imageDictionary[self.wellNumber].append(imageName)
@@ -381,21 +380,11 @@ class TableWidget(QWidget):
         self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
         if self.wellNumber in self.combosDictionary:
             imagesList = self.imageDictionary[self.wellNumber]
-            painter = QPainter()
             partNumber = 0
             for imageName in imagesList:
                 distanceLeft = 100 + 60*(partNumber)
                 sbolImage = QImage(imageName)
-                painter.begin(self.sbolLine)
-                if imageName == 'cds.png':
-                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 18, sbolImage)
-                elif imageName == 'insulator.png':
-                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 45, sbolImage)
-                elif imageName == 'promoter.png':
-                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 55, sbolImage)
-                elif imageName == 'terminator.png':
-                     painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 48, sbolImage)
-                painter.end()
+                self.imageDrawer(imageName, distanceLeft, sbolImage)
                 partNumber += 1
                 self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
 
@@ -431,21 +420,11 @@ class TableWidget(QWidget):
         self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
         if self.wellNumber in self.combosDictionary:
             imagesList = self.imageDictionary[self.wellNumber]
-            painter = QPainter()
             partNumber = 0
             for imageName in imagesList:
                 distanceLeft = 100 + 60*(partNumber)
                 sbolImage = QImage(imageName)
-                painter.begin(self.sbolLine)
-                if imageName == 'cds.png':
-                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 18, sbolImage)
-                elif imageName == 'insulator.png':
-                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 45, sbolImage)
-                elif imageName == 'promoter.png':
-                    painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 55, sbolImage)
-                elif imageName == 'terminator.png':
-                     painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 48, sbolImage)
-                painter.end()
+                self.imageDrawer(imageName, distanceLeft, sbolImage)
                 partNumber += 1
                 self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
 
@@ -456,13 +435,49 @@ class TableWidget(QWidget):
         self.tabs.setCurrentIndex(3)
 
         #creating CSV files
-        with open('test.csv', 'w', newline = '') as csv_file:
+
+        with open('combinations.csv', 'w', newline = '') as csv_file:
             writer = csv.writer(csv_file, delimiter=',')
             for key in range(1, len(self.combosDictionary) + 1):
                 partArray = self.combosDictionary[key].copy()
-                partArray.insert(0, 'Well #' + str(key))
+                partArray.insert(0, 'Combination_' + str(key))
                 writer.writerow(partArray)
 
+        with open('input_plate_map.csv', 'w', newline = '') as csv_file:
+            partArray = []
+            for key in range(1, len(self.combosDictionary) + 1):
+                partNameArray = self.combosDictionary[key].copy()
+                for partName in partNameArray:
+                    partArray.append(ps.findPart(partName))
+            partArray.sort()
+            writer = csv.writer(csv_file, delimiter=',')
+            inputList = []
+            counter = 1
+            for index, input in enumerate(partArray):
+                if input.getName() not in inputList:
+                    inputList.append(input.getName())
+                    counter += 1
+
+                if counter == 13 or index == len(partArray) - 1:
+                    writer.writerow(inputList)
+                    inputList = []
+                    counter = 1
+
+        with open('output_plate_map.csv', 'w', newline = '') as csv_file:
+            numCombosArray = []
+            writer = csv.writer(csv_file, delimiter=',')
+            numCombos = len(self.combosDictionary)
+            counter = 1
+            inputList = []
+            for i in range(1,numCombos+1):
+                numCombosArray.append('Combination_' + str(i))
+            for index, input in enumerate(numCombosArray):
+                counter += 1
+                inputList.append(input)
+                if counter == 13 or index == len(numCombosArray) - 1:
+                    writer.writerow(inputList)
+                    inputList = []
+                    counter = 1
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Backspace:
@@ -493,24 +508,27 @@ class TableWidget(QWidget):
 
                 self.sbolLine = QImage('bigblackline.png')
                 self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
-                painter = QPainter()
+                # painter = QPainter()
                 partNumber = 0
                 for imageName in imagesList:
                     distanceLeft = 100 + 60*(partNumber)
                     sbolImage = QImage(imageName)
-                    painter.begin(self.sbolLine)
-                    if imageName == 'cds.png':
-                        painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 18, sbolImage)
-                    elif imageName == 'insulator.png':
-                        painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 45, sbolImage)
-                    elif imageName == 'promoter.png':
-                        painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 55, sbolImage)
-                    elif imageName == 'terminator.png':
-                         painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 48, sbolImage)
-                    painter.end()
+                    self.imageDrawer(imageName, distanceLeft, sbolImage)
                     partNumber += 1
                     self.combinationTab.pictureWidget.setPixmap(QPixmap.fromImage(self.sbolLine))
 
+    def imageDrawer(self, imageName, distanceLeft, sbolImage):
+        painter = QPainter()
+        painter.begin(self.sbolLine)
+        if imageName == 'cds.png':
+            painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 18, sbolImage)
+        elif imageName == 'insulator.png':
+            painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 45, sbolImage)
+        elif imageName == 'promoter.png':
+            painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 55, sbolImage)
+        elif imageName == 'terminator.png':
+             painter.drawImage(self.combinationTab.pictureWidget.rect().left() + distanceLeft, self.combinationTab.pictureWidget.rect().center().y() - 48, sbolImage)
+        painter.end()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
