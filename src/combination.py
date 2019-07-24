@@ -1,16 +1,23 @@
 class Combination:
-    def __init__(self,name,partsList):
+    def __init__(self, name, partNameList):
         self.name = name
-        self.partsList = partsList
-    
+        self.partNameList = partNameList
+
     def getName(self):
         return self.name
-    
+
     def getPartsList(self):
-        return self.partsList
-    
-    def setName(self,name):
+        return self.partNameList
+
+    def setName(self, name):
         self.name = name
-    
-    def setParts(self,partsList):
-        self.partsList = partsList
+
+    def setParts(self, partNameList):
+        self.partNameList = partNameList
+
+    # def generateTypeList(self):
+    #     typeList = []
+    #     for part in self.partsList:
+    #         typeList.append(part.getType())
+
+    #     return typeList
